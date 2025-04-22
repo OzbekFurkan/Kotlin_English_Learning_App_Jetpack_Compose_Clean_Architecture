@@ -12,7 +12,9 @@ import androidx.navigation.NavController
 @Composable
 fun TestResultScreen(
     navController: NavController,
-    englishLevel: String
+    englishLevel: String,
+    onLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -46,21 +48,19 @@ fun TestResultScreen(
         Spacer(modifier = Modifier.height(32.dp))
         
         Button(
-            onClick = { 
-                try {
-                    navController.navigate(OnboardingRoutes.LOGIN) {
-                        popUpTo(OnboardingRoutes.WELCOME) { inclusive = true }
-                    }
-                } catch (e: Exception) {
-                    // Fallback navigation if the first attempt fails
-                    navController.navigate(OnboardingRoutes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            },
+            onClick = onLoginClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Continue to Login")
+            Text("Login")
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        OutlinedButton(
+            onClick = onRegisterClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Register")
         }
     }
 } 

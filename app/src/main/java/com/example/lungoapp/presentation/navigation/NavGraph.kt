@@ -1,20 +1,35 @@
 package com.example.lungoapp.presentation.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.lungoapp.presentation.auth.LoginScreen
 import com.example.lungoapp.presentation.auth.RegisterScreen
 import com.example.lungoapp.presentation.main.MainScreen
-import com.example.lungoapp.presentation.onboarding.*
+import com.example.lungoapp.presentation.onboarding.EnglishTestScreen
+import com.example.lungoapp.presentation.onboarding.OnboardingRoutes
+import com.example.lungoapp.presentation.onboarding.PersonalInfoScreen
+import com.example.lungoapp.presentation.onboarding.TestResultScreen
+import com.example.lungoapp.presentation.onboarding.WelcomeScreen
+import com.example.lungoapp.presentation.practice.PracticeModeScreen
+import com.example.lungoapp.presentation.practice.vocabulary.VocabularyQuizScreen
+import com.example.lungoapp.presentation.practice.listening.ListeningQuizScreen
+import com.example.lungoapp.presentation.practice.reading.ReadingPracticeScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    startDestination: String = OnboardingRoutes.WELCOME
+) {
     NavHost(
         navController = navController,
-        startDestination = OnboardingRoutes.WELCOME
+        startDestination = startDestination
     ) {
+        // Onboarding routes
         composable(OnboardingRoutes.WELCOME) {
             WelcomeScreen(
                 onGetStartedClick = {
@@ -45,60 +60,87 @@ fun NavGraph(navController: NavHostController) {
             )
         }
         
-        composable(
-            route = "${OnboardingRoutes.TEST_RESULT}/{englishLevel}",
-            arguments = listOf(
-                androidx.navigation.navArgument("englishLevel") {
-                    type = androidx.navigation.NavType.StringType
-                    require(true)
-                }
-            )
-        ) { backStackEntry ->
+        composable("${OnboardingRoutes.TEST_RESULT}/{englishLevel}") { backStackEntry ->
             val englishLevel = backStackEntry.arguments?.getString("englishLevel") ?: "Beginner"
             TestResultScreen(
                 navController = navController,
-                englishLevel = englishLevel
+                englishLevel = englishLevel,
+                onLoginClick = {
+                    navController.navigate(OnboardingRoutes.LOGIN)
+                },
+                onRegisterClick = {
+                    navController.navigate(OnboardingRoutes.REGISTER)
+                }
             )
         }
         
+        // Auth routes
         composable(OnboardingRoutes.LOGIN) {
             LoginScreen(
+                navController = navController,
                 onLoginSuccess = {
                     navController.navigate(OnboardingRoutes.HOME) {
                         popUpTo(OnboardingRoutes.LOGIN) { inclusive = true }
                     }
                 },
-                onRegisterClick = { englishLevel ->
-                    navController.navigate("${OnboardingRoutes.REGISTER}/$englishLevel")
+                onNavigateToRegister = {
+                    navController.navigate(OnboardingRoutes.REGISTER)
                 }
             )
         }
         
-        composable(
-            route = "${OnboardingRoutes.REGISTER}/{englishLevel}",
-            arguments = listOf(
-                androidx.navigation.navArgument("englishLevel") {
-                    type = androidx.navigation.NavType.StringType
-                    require(true)
-                }
-            )
-        ) { backStackEntry ->
-            val englishLevel = backStackEntry.arguments?.getString("englishLevel") ?: "Beginner"
+        composable(OnboardingRoutes.REGISTER) {
             RegisterScreen(
+                navController = navController,
                 onRegisterSuccess = {
                     navController.navigate(OnboardingRoutes.HOME) {
                         popUpTo(OnboardingRoutes.REGISTER) { inclusive = true }
                     }
                 },
-                onLoginClick = {
+                onNavigateToLogin = {
                     navController.navigate(OnboardingRoutes.LOGIN)
-                },
-                englishLevel = englishLevel
+                }
             )
         }
         
+        // Main app with bottom navigation
         composable(OnboardingRoutes.HOME) {
-            MainScreen()
+            MainScreen(parentNavController = navController)
+        }
+
+        // Practice routes
+        composable(
+            route = "practice/{mode}",
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString("mode") ?: return@composable
+            PracticeModeScreen(
+                navController = navController,
+                practiceMode = mode
+            )
+        }
+
+        composable(
+            route = "practice/{mode}/{topic}",
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType },
+                navArgument("topic") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val mode = backStackEntry.arguments?.getString("mode") ?: return@composable
+            val topic = backStackEntry.arguments?.getString("topic") ?: return@composable
+            when (mode.lowercase()) {
+                "vocabulary" -> VocabularyQuizScreen(navController = navController)
+                "listening" -> ListeningQuizScreen(
+                    onNavigateBack = { navController.navigateUp() }
+                )
+                "reading" -> ReadingPracticeScreen(
+                    onNavigateBack = { navController.navigateUp() }
+                )
+                else -> Text("Practice $mode - $topic")
+            }
         }
     }
 } 

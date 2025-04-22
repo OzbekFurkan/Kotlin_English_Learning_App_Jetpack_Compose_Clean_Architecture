@@ -46,7 +46,17 @@ fun OnboardingScreen(
             val englishLevel = navController.currentBackStackEntry?.arguments?.getString("englishLevel") ?: "Beginner"
             TestResultScreen(
                 navController = navController,
-                englishLevel = englishLevel
+                englishLevel = englishLevel,
+                onLoginClick = {
+                    navController.navigate(OnboardingRoutes.LOGIN) {
+                        popUpTo(OnboardingRoutes.WELCOME) { inclusive = true }
+                    }
+                },
+                onRegisterClick = {
+                    navController.navigate(OnboardingRoutes.REGISTER) {
+                        popUpTo(OnboardingRoutes.WELCOME) { inclusive = true }
+                    }
+                }
             )
         }
         else -> {

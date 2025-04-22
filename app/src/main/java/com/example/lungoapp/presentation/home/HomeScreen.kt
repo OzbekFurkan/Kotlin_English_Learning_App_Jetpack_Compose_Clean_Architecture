@@ -111,13 +111,15 @@ fun HomeScreen(navController: NavController) {
                 LearningOptionCard(
                     title = "Vocabulary",
                     icon = Icons.Default.Email,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate("practice/vocabulary/serbest") }
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 LearningOptionCard(
                     title = "Speaking",
                     icon = Icons.Default.Call,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate("practice/speaking") }
                 )
             }
 
@@ -130,13 +132,15 @@ fun HomeScreen(navController: NavController) {
                 LearningOptionCard(
                     title = "Listening",
                     icon = Icons.Default.PlayArrow,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate("practice/listening") }
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 LearningOptionCard(
                     title = "Reading",
                     icon = Icons.Default.Face,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = { navController.navigate("practice/reading") }
                 )
             }
         }
@@ -171,14 +175,15 @@ fun StatItem(
 fun LearningOptionCard(
     title: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = modifier.aspectRatio(1f),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFFF5722)
         ),
-        onClick = { /* Handle click */ }
+        onClick = onClick
     ) {
         Column(
             modifier = Modifier

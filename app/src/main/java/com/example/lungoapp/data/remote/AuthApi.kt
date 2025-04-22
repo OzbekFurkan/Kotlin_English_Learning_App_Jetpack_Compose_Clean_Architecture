@@ -1,25 +1,14 @@
 package com.example.lungoapp.data.remote
 
-interface AuthApi {
-    suspend fun login(request: LoginRequest): UserDto {
-        // Mock successful login
-        return UserDto(
-            id = "1",
-            email = request.email,
-            name = "Test User",
-            englishLevel = "Intermediate"
-        )
-    }
+import retrofit2.http.Body
+import retrofit2.http.POST
 
-    suspend fun register(request: RegisterRequest): UserDto {
-        // Mock successful registration
-        return UserDto(
-            id = "1",
-            email = request.email,
-            name = request.name,
-            englishLevel = request.englishLevel
-        )
-    }
+interface AuthApi {
+    @POST("token")
+    suspend fun login(@Body request: LoginRequest): TokenResponse
+
+    @POST("register")
+    suspend fun register(@Body request: RegisterRequest): UserDto
 }
 
 data class LoginRequest(
@@ -28,15 +17,29 @@ data class LoginRequest(
 )
 
 data class RegisterRequest(
+    val username: String,
     val email: String,
     val password: String,
-    val name: String,
-    val englishLevel: String
+    val gender: String,
+    val age: Int,
+    val edu_status: String,
+    val prev_edu_year: Int,
+    val level_id: Int
+)
+
+data class TokenResponse(
+    val access_token: String,
+    val token_type: String
 )
 
 data class UserDto(
-    val id: String,
+    val user_id: Int,
+    val username: String,
     val email: String,
-    val name: String,
-    val englishLevel: String
+    val gender: String,
+    val age: Int,
+    val edu_status: String,
+    val prev_edu_year: Int,
+    val level_id: Int,
+    val user_reg_date: String
 ) 
