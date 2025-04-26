@@ -19,6 +19,7 @@ import com.example.lungoapp.presentation.practice.PracticeModeScreen
 import com.example.lungoapp.presentation.practice.vocabulary.VocabularyQuizScreen
 import com.example.lungoapp.presentation.practice.listening.ListeningQuizScreen
 import com.example.lungoapp.presentation.practice.reading.ReadingPracticeScreen
+import com.example.lungoapp.presentation.practice.speaking.SpeakingPracticeScreen
 
 @Composable
 fun NavGraph(
@@ -116,10 +117,15 @@ fun NavGraph(
             )
         ) { backStackEntry ->
             val mode = backStackEntry.arguments?.getString("mode") ?: return@composable
-            PracticeModeScreen(
-                navController = navController,
-                practiceMode = mode
-            )
+            when (mode.lowercase()) {
+                "speaking" -> SpeakingPracticeScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+                else -> PracticeModeScreen(
+                    navController = navController,
+                    practiceMode = mode
+                )
+            }
         }
 
         composable(
@@ -137,7 +143,7 @@ fun NavGraph(
                     onNavigateBack = { navController.navigateUp() }
                 )
                 "reading" -> ReadingPracticeScreen(
-                    onNavigateBack = { navController.navigateUp() }
+                    onNavigateBack = { navController.popBackStack() }
                 )
                 else -> Text("Practice $mode - $topic")
             }

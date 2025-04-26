@@ -1,4 +1,4 @@
-package com.example.lungoapp.data.repository
+package com.example.lungoapp.domain.repository
 
 interface WordRepository {
     suspend fun getRandomWord(): String
@@ -6,4 +6,4 @@ interface WordRepository {
     suspend fun addWord(word: String)
     suspend fun removeWord(word: String)
     suspend fun getAllWords(): List<String>
-} 
+}

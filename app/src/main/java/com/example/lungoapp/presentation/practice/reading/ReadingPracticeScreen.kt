@@ -21,8 +21,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.lungoapp.ui.components.ClickableWord
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ReadingPracticeScreen(
     onNavigateBack: () -> Unit,
@@ -33,6 +37,7 @@ fun ReadingPracticeScreen(
     var showResultsDialog by remember { mutableStateOf(false) }
     var accuracyResult by remember { mutableStateOf(0f) }
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
 
     // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -148,12 +153,36 @@ fun ReadingPracticeScreen(
                 is ReadingPracticeViewModel.UiState.Success -> {
                     val state = uiState as ReadingPracticeViewModel.UiState.Success
                     
-                    // Display the reading passage
-                    Text(
-                        text = state.passage,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
+                    // Display the reading passage as clickable words
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        state.passage.split("\n").forEach { paragraph ->
+                            FlowRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                paragraph.split(" ").forEach { word ->
+                                    ClickableWord(
+                                        word = word,
+                                        onSave = { 
+                                            scope.launch {
+                                                viewModel.saveBookmark(word)
+                                            }
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                }
+                            }
+                        }
+                    }
 
                     // Display the user's spoken text
                     Text(

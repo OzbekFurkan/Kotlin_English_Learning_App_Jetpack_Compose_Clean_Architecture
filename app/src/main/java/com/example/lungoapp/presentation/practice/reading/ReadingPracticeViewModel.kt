@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.lungoapp.data.model.ReadingPractice
 import com.example.lungoapp.data.repository.ReadingPracticeRepository
 import com.example.lungoapp.services.SpeechToTextService
+import com.example.lungoapp.data.repository.BookmarkRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +22,8 @@ private const val TAG = "ReadingPracticeViewModel"
 @HiltViewModel
 class ReadingPracticeViewModel @Inject constructor(
     private val repository: ReadingPracticeRepository,
-    private val speechToTextService: SpeechToTextService
+    private val speechToTextService: SpeechToTextService,
+    private val bookmarkRepository: BookmarkRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -148,6 +150,14 @@ class ReadingPracticeViewModel @Inject constructor(
             return finalScore.coerceIn(0f, 100f)
         }
         return 0f
+    }
+
+    suspend fun saveBookmark(word: String) {
+        try {
+            bookmarkRepository.saveBookmark(word)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving bookmark: ${e.message}")
+        }
     }
 
     sealed class UiState {

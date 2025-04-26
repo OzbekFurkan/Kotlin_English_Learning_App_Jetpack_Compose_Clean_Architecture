@@ -28,6 +28,7 @@ class User(Base):
     level_id = Column(Integer, ForeignKey("Eng_Levels.level_id"))
 
     questions = relationship("Question", back_populates="user")
+    bookmarks = relationship("Bookmark", back_populates="user")
 
 class Question(Base):
     __tablename__ = "Questions"
@@ -76,6 +77,16 @@ class Word(Base):
     word = Column(String(100), primary_key=True)
     eng_level = Column(String(45))
     count = Column(BIGINT)
+
+class Bookmark(Base):
+    __tablename__ = "Bookmarks"
+
+    bm_id = Column(Integer, primary_key=True, index=True)
+    word = Column(String(100))
+    word_tr = Column(String(100))
+    user_id = Column(Integer, ForeignKey("Users.user_id"))
+
+    user = relationship("User", back_populates="bookmarks")
 
 # Dependency
 def get_db():

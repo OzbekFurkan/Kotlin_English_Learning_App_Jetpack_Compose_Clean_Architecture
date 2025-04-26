@@ -113,7 +113,8 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-systemuicontroller:0.31.4-beta")
 
     //Datastore
-    implementation("androidx.datastore:datastore-preferences:1.1.3")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.datastore:datastore-preferences-core:1.0.0")
 
     //Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

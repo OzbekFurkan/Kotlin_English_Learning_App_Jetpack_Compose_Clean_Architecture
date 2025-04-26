@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.lungoapp.ui.components.ClickableWord
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,25 +66,11 @@ fun VocabularyQuizScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Text(
-                                text = "An error occurred. Please try again.",
-                                color = MaterialTheme.colorScheme.error,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.loadNextQuestion() },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Text("Retry")
-                            }
-                        }
+                        Text(
+                            text = "Error loading question",
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
                 is QuizState.Success -> {
@@ -93,10 +80,10 @@ fun VocabularyQuizScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
                         
-                        Text(
-                            text = question.word,
-                            style = MaterialTheme.typography.headlineMedium,
-                            textAlign = TextAlign.Center
+                        ClickableWord(
+                            word = question.word,
+                            onSave = { viewModel.saveBookmark(question.word) },
+                            modifier = Modifier.padding(vertical = 16.dp)
                         )
 
                         Spacer(modifier = Modifier.height(32.dp))
@@ -106,7 +93,10 @@ fun VocabularyQuizScreen(
                                 onClick = { viewModel.checkAnswer(option) },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(option)
+                                ClickableWord(
+                                    word = option,
+                                    onSave = { viewModel.saveBookmark(option) }
+                                )
                             }
                         }
                     } ?: run {

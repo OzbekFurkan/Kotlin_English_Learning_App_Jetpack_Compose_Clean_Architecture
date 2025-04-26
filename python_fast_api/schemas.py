@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class Token(BaseModel):
@@ -87,4 +87,17 @@ class Option(OptionBase):
     op_id: int
 
     class Config:
-        from_attributes = True 
+        from_attributes = True
+
+class Bookmark(BaseModel):
+    bm_id: int
+    word: str
+    word_tr: str
+    user_id: int
+
+    class Config:
+        orm_mode = True
+
+class BookmarkCreate(BaseModel):
+    word: str
+    word_tr: str 

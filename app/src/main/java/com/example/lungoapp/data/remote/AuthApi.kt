@@ -1,6 +1,7 @@
 package com.example.lungoapp.data.remote
 
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface AuthApi {
@@ -9,6 +10,9 @@ interface AuthApi {
 
     @POST("register")
     suspend fun register(@Body request: RegisterRequest): UserDto
+
+    @GET("user")
+    suspend fun getUserData(): UserDto
 }
 
 data class LoginRequest(

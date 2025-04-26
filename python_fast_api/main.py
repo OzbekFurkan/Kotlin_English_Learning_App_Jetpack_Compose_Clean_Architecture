@@ -197,12 +197,60 @@ async def get_random_words(count: int, db: Session = Depends(database.get_db)):
         for word in random_words
     ]
 
+# Bookmark endpoints
+@app.post("/bookmarks/", response_model=schemas.Bookmark)
+async def create_bookmark(
+    bookmark: schemas.BookmarkCreate,
+    db: Session = Depends(database.get_db),
+    current_user: User = Depends(auth.get_current_user)
+):
+    db_bookmark = database.Bookmark(
+        word=bookmark.word,
+        word_tr=bookmark.word_tr,
+        user_id=current_user.user_id
+    )
+    db.add(db_bookmark)
+    db.commit()
+    db.refresh(db_bookmark)
+    return db_bookmark
+
+@app.get("/bookmarks/", response_model=List[schemas.Bookmark])
+async def get_bookmarks(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(database.get_db),
+    current_user: User = Depends(auth.get_current_user)
+):
+    return db.query(database.Bookmark).filter(
+        database.Bookmark.user_id == current_user.user_id
+    ).offset(skip).limit(limit).all()
+
+@app.delete("/bookmarks/{bookmark_id}")
+async def delete_bookmark(
+    bookmark_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: User = Depends(auth.get_current_user)
+):
+    bookmark = db.query(database.Bookmark).filter(
+        database.Bookmark.bm_id == bookmark_id,
+        database.Bookmark.user_id == current_user.user_id
+    ).first()
+    
+    if not bookmark:
+        raise HTTPException(status_code=404, detail="Bookmark not found")
+    
+    db.delete(bookmark)
+    db.commit()
+    return {"message": "Bookmark deleted successfully"}
+
 # Translation endpoint
 @app.get("/translate")
 async def translate_text(text: str, source: str = "en", target: str = "tr"):
     try:
+        logger.debug(f"Translating text: {text} from {source} to {target}")
         translator = Translator()
         translation = translator.translate(text, src=source, dest=target)
+        logger.debug(f"Translation result: {translation.text}")
         return {
             "original_text": text,
             "translated_text": translation.text,
@@ -210,7 +258,12 @@ async def translate_text(text: str, source: str = "en", target: str = "tr"):
             "target_language": target
         }
     except Exception as e:
+        logger.error(f"Translation error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/user", response_model=schemas.User)
+async def get_current_user(current_user: User = Depends(auth.get_current_user)):
+    return current_user
 
 if __name__ == "__main__":
     import uvicorn

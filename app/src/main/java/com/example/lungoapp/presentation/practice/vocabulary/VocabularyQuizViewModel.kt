@@ -1,14 +1,18 @@
 package com.example.lungoapp.presentation.practice.vocabulary
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.lungoapp.data.repository.WordRepository
+import com.example.lungoapp.data.manager.UserManager
+import com.example.lungoapp.data.repository.BookmarkRepository
+import com.example.lungoapp.domain.repository.WordRepository
 import com.example.lungoapp.services.TranslationService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,7 +31,9 @@ sealed class QuizState {
 @HiltViewModel
 class VocabularyQuizViewModel @Inject constructor(
     private val wordRepository: WordRepository,
-    private val translationService: TranslationService
+    private val translationService: TranslationService,
+    private val bookmarkRepository: BookmarkRepository,
+    private val userManager: UserManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<QuizState>(QuizState.Loading)
@@ -38,6 +44,16 @@ class VocabularyQuizViewModel @Inject constructor(
 
     private val _score = MutableStateFlow(0)
     val score: StateFlow<Int> = _score.asStateFlow()
+
+    fun saveBookmark(word: String) {
+        viewModelScope.launch {
+            try {
+                bookmarkRepository.saveBookmark(word)
+            } catch (e: Exception) {
+                Log.e("TAG", "Error saving bookmark", e)
+            }
+        }
+    }
 
     fun loadNextQuestion() {
         viewModelScope.launch {

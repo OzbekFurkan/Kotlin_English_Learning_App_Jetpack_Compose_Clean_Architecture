@@ -1,6 +1,7 @@
 package com.example.lungoapp.data.repository
 
 import com.example.lungoapp.data.remote.WordApi
+import com.example.lungoapp.domain.repository.WordRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 

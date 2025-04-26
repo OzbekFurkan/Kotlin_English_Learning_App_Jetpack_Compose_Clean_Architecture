@@ -18,8 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.lungoapp.ui.components.ClickableWord
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ListeningQuizScreen(
     onNavigateBack: () -> Unit,
@@ -104,11 +105,22 @@ fun ListeningQuizScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text(
-                                text = quiz.snippetWithBlank,
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center
-                            )
+                            // Split the snippet into words and make each word clickable
+                            FlowRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 4.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                quiz.snippetWithBlank.split(" ").forEach { word ->
+                                    ClickableWord(
+                                        word = word,
+                                        onSave = { viewModel.saveBookmark(word) }
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                }
+                            }
 
                             FilledTonalButton(
                                 onClick = {
@@ -139,9 +151,9 @@ fun ListeningQuizScreen(
                                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         ) {
-                            Text(
-                                text = option,
-                                style = MaterialTheme.typography.bodyLarge
+                            ClickableWord(
+                                word = option,
+                                onSave = { viewModel.saveBookmark(option) }
                             )
                         }
                     }

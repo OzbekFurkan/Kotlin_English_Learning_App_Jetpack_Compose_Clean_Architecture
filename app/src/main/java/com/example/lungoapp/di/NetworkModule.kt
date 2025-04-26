@@ -1,16 +1,14 @@
 package com.example.lungoapp.di
 
-import com.example.lungoapp.data.remote.AuthApi
-import com.example.lungoapp.data.remote.LoginRequest
-import com.example.lungoapp.data.remote.RegisterRequest
-import com.example.lungoapp.data.remote.TokenResponse
-import com.example.lungoapp.data.remote.UserDto
-import com.example.lungoapp.data.remote.WordApi
+import android.util.Log
+import com.example.lungoapp.data.manager.UserManager
+import com.example.lungoapp.data.remote.*
 import com.example.lungoapp.services.TranslationService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -23,8 +21,32 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideAuthInterceptor(userManager: UserManager): Interceptor {
+        return Interceptor { chain ->
+            val request = chain.request()
+            val token = userManager.getToken()
+            Log.d("AuthInterceptor", "Token: $token")
+            
+            if (token != null) {
+                val newRequest = request.newBuilder()
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+                Log.d("AuthInterceptor", "Added Authorization header: Bearer $token")
+                chain.proceed(newRequest)
+            } else {
+                Log.d("AuthInterceptor", "No token available")
+                chain.proceed(request)
+            }
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        authInterceptor: Interceptor
+    ): OkHttpClient {
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -57,5 +79,17 @@ object NetworkModule {
     @Singleton
     fun provideTranslationService(retrofit: Retrofit): TranslationService {
         return retrofit.create(TranslationService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit): ApiService {
+        return retrofit.create(ApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTranslateService(retrofit: Retrofit): TranslateService {
+        return retrofit.create(TranslateService::class.java)
     }
 } 

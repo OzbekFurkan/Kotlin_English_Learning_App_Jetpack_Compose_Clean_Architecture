@@ -1,6 +1,7 @@
 package com.example.lungoapp.data.repository
 
 import com.example.lungoapp.data.model.ListeningQuiz
+import com.example.lungoapp.domain.repository.WordRepository
 import com.example.lungoapp.services.GeminiService
 import javax.inject.Inject
 import javax.inject.Singleton
