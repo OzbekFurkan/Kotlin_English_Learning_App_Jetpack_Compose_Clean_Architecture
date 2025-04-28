@@ -18,8 +18,8 @@ class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=45)
     gender: str = Field(..., pattern="^(male|female|other)$")
     age: int = Field(..., gt=0, lt=150)
-    edu_status: str = Field(..., min_length=2, max_length=45)
-    prev_edu_year: int = Field(..., gt=1900, lt=2100)
+    edu_status: str = Field()
+    prev_edu_year: int = Field(..., gt=0)
     level_id: int = Field(..., gt=0)
 
 class UserCreate(UserBase):

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.lungoapp.domain.model.User
 import com.example.lungoapp.domain.repository.AuthRepository
+import com.example.lungoapp.presentation.onboarding.PersonalInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,6 +42,25 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
             repository.register(email, password, name, englishLevel)
+                .onSuccess { user ->
+                    _uiState.value = AuthUiState.Success(user)
+                }
+                .onFailure { e ->
+                    _uiState.value = AuthUiState.Error(e.message ?: "An error occurred")
+                }
+        }
+    }
+
+    fun registerWithPersonalInfo(
+        email: String,
+        password: String,
+        name: String,
+        englishLevel: String,
+        personalInfo: PersonalInfo
+    ) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            repository.registerWithPersonalInfo(email, password, name, englishLevel, personalInfo)
                 .onSuccess { user ->
                     _uiState.value = AuthUiState.Success(user)
                 }

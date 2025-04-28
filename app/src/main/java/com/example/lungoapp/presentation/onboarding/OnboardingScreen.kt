@@ -1,5 +1,6 @@
 package com.example.lungoapp.presentation.onboarding
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -7,13 +8,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 
 @Composable
 fun OnboardingScreen(
     navController: NavController,
-    currentRoute: String
+    currentRoute: String,
+    viewModel: OnboardingViewModel = hiltViewModel()
 ) {
+    Log.d("OnboardingScreen", "Current route: $currentRoute")
+    Log.d("OnboardingScreen", "ViewModel hash: ${viewModel.hashCode()}")
+
     when (currentRoute) {
         OnboardingRoutes.WELCOME -> {
             WelcomeScreen(
@@ -24,6 +30,7 @@ fun OnboardingScreen(
         }
         OnboardingRoutes.PERSONAL_INFO -> {
             PersonalInfoScreen(
+                viewModel = viewModel,
                 onNextClick = {
                     navController.navigate(OnboardingRoutes.ENGLISH_TEST)
                 }
@@ -31,29 +38,17 @@ fun OnboardingScreen(
         }
         OnboardingRoutes.ENGLISH_TEST -> {
             EnglishTestScreen(
-                onFinishClick = { score ->
-                    val level = when {
-                        score <= 3 -> "Beginner"
-                        score <= 6 -> "Intermediate"
-                        score <= 8 -> "Upper Intermediate"
-                        else -> "Advanced"
-                    }
-                    navController.navigate("${OnboardingRoutes.TEST_RESULT}/$level")
+                viewModel = viewModel,
+                onFinishClick = {
+                    navController.navigate(OnboardingRoutes.TEST_RESULT)
                 }
             )
         }
         OnboardingRoutes.TEST_RESULT -> {
-            val englishLevel = navController.currentBackStackEntry?.arguments?.getString("englishLevel") ?: "Beginner"
             TestResultScreen(
-                navController = navController,
-                englishLevel = englishLevel,
-                onLoginClick = {
+                viewModel = viewModel,
+                onNext = {
                     navController.navigate(OnboardingRoutes.LOGIN) {
-                        popUpTo(OnboardingRoutes.WELCOME) { inclusive = true }
-                    }
-                },
-                onRegisterClick = {
-                    navController.navigate(OnboardingRoutes.REGISTER) {
                         popUpTo(OnboardingRoutes.WELCOME) { inclusive = true }
                     }
                 }

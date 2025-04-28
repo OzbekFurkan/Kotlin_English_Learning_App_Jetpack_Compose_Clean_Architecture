@@ -14,6 +14,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.lungoapp.presentation.onboarding.OnboardingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,19 +22,21 @@ fun RegisterScreen(
     navController: NavController,
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit,
-    viewModel: AuthViewModel = hiltViewModel()
+    onboardingViewModel: OnboardingViewModel
 ) {
-    var name by remember { mutableStateOf("") }
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val uiState by authViewModel.uiState.collectAsState()
+    val personalInfo by onboardingViewModel.personalInfo.collectAsState()
+    val cefrLevel by onboardingViewModel.cefrLevel.collectAsState()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    val uiState by viewModel.uiState.collectAsState()
+    var name by remember { mutableStateOf(personalInfo.name) }
 
     LaunchedEffect(uiState) {
         when (uiState) {
-            is AuthUiState.Success -> {
-                onRegisterSuccess()
-            }
+            is AuthUiState.Success -> onRegisterSuccess()
             else -> {}
         }
     }
@@ -62,16 +65,6 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Center
         ) {
             OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
@@ -79,7 +72,7 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = password,
@@ -90,7 +83,7 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = confirmPassword,
@@ -101,19 +94,41 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { 
-                    if (password == confirmPassword) {
-                        viewModel.register(email, password, name, "b2")
+                onClick = {
+                    if (personalInfo.name.isNotEmpty() && cefrLevel != null) {
+                        authViewModel.registerWithPersonalInfo(
+                            email = email,
+                            password = password,
+                            name = name,
+                            englishLevel = cefrLevel!!,
+                            personalInfo = personalInfo
+                        )
+                    } else {
+                        authViewModel.register(
+                            email = email,
+                            password = password,
+                            name = name,
+                            englishLevel = "B2"
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = name.isNotEmpty() && 
-                         email.isNotEmpty() && 
+                enabled = email.isNotEmpty() && 
                          password.isNotEmpty() && 
                          confirmPassword.isNotEmpty() && 
+                         name.isNotEmpty() && 
                          password == confirmPassword &&
                          uiState !is AuthUiState.Loading
             ) {
@@ -127,7 +142,7 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             TextButton(onClick = onNavigateToLogin) {
                 Text("Already have an account? Login")

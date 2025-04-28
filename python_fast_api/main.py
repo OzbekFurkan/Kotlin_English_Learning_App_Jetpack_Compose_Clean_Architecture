@@ -8,6 +8,12 @@ from dotenv import load_dotenv
 import logging
 import random
 from googletrans import Translator
+from pydantic import BaseModel
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+import joblib
 
 import database, schemas, auth
 from database import User, Question, Category, EnglishLevel, Type, Option, Word
@@ -264,6 +270,123 @@ async def translate_text(text: str, source: str = "en", target: str = "tr"):
 @app.get("/user", response_model=schemas.User)
 async def get_current_user(current_user: User = Depends(auth.get_current_user)):
     return current_user
+
+# Load and preprocess the dataset
+def load_and_preprocess_data():
+    # Load the Excel file
+    df = pd.read_excel('dataset/İngilizce Test (Yanıtlar).xlsx')
+    
+    # No categorical encoding needed, all columns are numeric
+    # Split features and target
+    X = df.drop('eng_level', axis=1)
+    y = df['eng_level']
+    
+    # Scale the features
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    
+    # Create label encoder for target
+    label_encoder = LabelEncoder()
+    y_encoded = label_encoder.fit_transform(y)
+    
+    return X_scaled, y_encoded, label_encoder, scaler
+
+# Train the ANN model
+def train_model(X, y):
+    model = tf.keras.Sequential([
+        tf.keras.layers.Dense(64, activation='relu', input_shape=(X.shape[1],)),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(32, activation='relu'),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(len(np.unique(y)), activation='softmax')
+    ])
+    
+    model.compile(optimizer='adam',
+                 loss='sparse_categorical_crossentropy',
+                 metrics=['accuracy'])
+    
+    model.fit(X, y, epochs=50, batch_size=32, validation_split=0.2)
+    
+    return model
+
+# Load or train the model
+try:
+    X, y, label_encoder, scaler = load_and_preprocess_data()
+    model = train_model(X, y)
+except Exception as e:
+    print(f"Error loading/training model: {e}")
+    model = None
+    label_encoder = None
+    scaler = None
+
+class UserData(BaseModel):
+    gender: int
+    age: int
+    edu_status: int
+    prev_edu_ye: int
+    q1: int
+    q2: int
+    q3: int
+    q4: int
+    q5: int
+    q6: int
+    q7: int
+    q8: int
+    q9: int
+    q10: int
+
+@app.post("/predict_cefr_level")
+async def predict_cefr_level(user_data: UserData):
+    logger.debug("Received CEFR prediction request with data:")
+    logger.debug(f"Gender: {user_data.gender}")
+    logger.debug(f"Age: {user_data.age}")
+    logger.debug(f"Education Status: {user_data.edu_status}")
+    logger.debug(f"Previous Education Years: {user_data.prev_edu_ye}")
+    logger.debug(f"Test Answers: {[user_data.q1, user_data.q2, user_data.q3, user_data.q4, user_data.q5, user_data.q6, user_data.q7, user_data.q8, user_data.q9, user_data.q10]}")
+
+    try:
+        if model is None or scaler is None or label_encoder is None:
+            raise HTTPException(status_code=500, detail="Model not initialized")
+            
+        # Prepare input data
+        input_data = np.array([
+            user_data.gender,
+            user_data.age,
+            user_data.edu_status,
+            user_data.prev_edu_ye,
+            user_data.q1,
+            user_data.q2,
+            user_data.q3,
+            user_data.q4,
+            user_data.q5,
+            user_data.q6,
+            user_data.q7,
+            user_data.q8,
+            user_data.q9,
+            user_data.q10
+        ]).reshape(1, -1)
+        
+        # Scale input data
+        logger.debug("Scaling input data...")
+        input_data_scaled = scaler.transform(input_data)
+        
+        # Make prediction
+        logger.debug("Making prediction...")
+        prediction = model.predict(input_data_scaled)
+        
+        # Get the index of the highest probability
+        predicted_class = np.argmax(prediction, axis=1)
+        logger.debug(f"Raw prediction: {prediction}")
+        logger.debug(f"Predicted class index: {predicted_class}")
+        
+        # Convert prediction to CEFR level and convert to Python int
+        predicted_level = int(label_encoder.inverse_transform(predicted_class)[0])
+        logger.debug(f"Predicted CEFR level: {predicted_level}")
+        
+        return {"predicted_cefr_level": predicted_level}
+    except Exception as e:
+        logger.error(f"Error in CEFR prediction: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

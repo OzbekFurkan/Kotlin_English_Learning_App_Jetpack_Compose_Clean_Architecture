@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.lungoapp.presentation.auth.LoginScreen
 import com.example.lungoapp.presentation.auth.RegisterScreen
 import com.example.lungoapp.presentation.main.MainScreen
@@ -15,6 +16,7 @@ import com.example.lungoapp.presentation.onboarding.OnboardingRoutes
 import com.example.lungoapp.presentation.onboarding.PersonalInfoScreen
 import com.example.lungoapp.presentation.onboarding.TestResultScreen
 import com.example.lungoapp.presentation.onboarding.WelcomeScreen
+import com.example.lungoapp.presentation.onboarding.OnboardingViewModel
 import com.example.lungoapp.presentation.practice.PracticeModeScreen
 import com.example.lungoapp.presentation.practice.vocabulary.VocabularyQuizScreen
 import com.example.lungoapp.presentation.practice.listening.ListeningQuizScreen
@@ -26,6 +28,9 @@ fun NavGraph(
     navController: NavHostController,
     startDestination: String = OnboardingRoutes.WELCOME
 ) {
+    // Create a single instance of OnboardingViewModel to be shared across screens
+    val onboardingViewModel: OnboardingViewModel = hiltViewModel()
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -41,6 +46,7 @@ fun NavGraph(
         
         composable(OnboardingRoutes.PERSONAL_INFO) {
             PersonalInfoScreen(
+                viewModel = onboardingViewModel,
                 onNextClick = {
                     navController.navigate(OnboardingRoutes.ENGLISH_TEST)
                 }
@@ -49,28 +55,20 @@ fun NavGraph(
         
         composable(OnboardingRoutes.ENGLISH_TEST) {
             EnglishTestScreen(
-                onFinishClick = { score ->
-                    val level = when {
-                        score <= 3 -> "Beginner"
-                        score <= 6 -> "Intermediate"
-                        score <= 8 -> "Upper Intermediate"
-                        else -> "Advanced"
-                    }
-                    navController.navigate("${OnboardingRoutes.TEST_RESULT}/$level")
+                viewModel = onboardingViewModel,
+                onFinishClick = {
+                    navController.navigate(OnboardingRoutes.TEST_RESULT)
                 }
             )
         }
         
-        composable("${OnboardingRoutes.TEST_RESULT}/{englishLevel}") { backStackEntry ->
-            val englishLevel = backStackEntry.arguments?.getString("englishLevel") ?: "Beginner"
+        composable(OnboardingRoutes.TEST_RESULT) {
             TestResultScreen(
-                navController = navController,
-                englishLevel = englishLevel,
-                onLoginClick = {
-                    navController.navigate(OnboardingRoutes.LOGIN)
-                },
-                onRegisterClick = {
-                    navController.navigate(OnboardingRoutes.REGISTER)
+                viewModel = onboardingViewModel,
+                onNext = {
+                    navController.navigate(OnboardingRoutes.LOGIN) {
+                        popUpTo(OnboardingRoutes.WELCOME) { inclusive = true }
+                    }
                 }
             )
         }
@@ -100,7 +98,8 @@ fun NavGraph(
                 },
                 onNavigateToLogin = {
                     navController.navigate(OnboardingRoutes.LOGIN)
-                }
+                },
+                onboardingViewModel = onboardingViewModel
             )
         }
         
